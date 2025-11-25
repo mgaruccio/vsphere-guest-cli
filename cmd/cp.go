@@ -44,8 +44,16 @@ func runTransfer(ctx context.Context, localPath, remotePath string, upload bool)
 	if targetVMName == "" {
 		return fmt.Errorf("--vm flag is required")
 	}
+
+	if cpGuestUser == "" {
+		cpGuestUser = os.Getenv("GUEST_USER")
+	}
+	if cpGuestPwd == "" {
+		cpGuestPwd = os.Getenv("GUEST_PASSWORD")
+	}
+
 	if cpGuestUser == "" || cpGuestPwd == "" {
-		return fmt.Errorf("--guest-user and --guest-password are required")
+		return fmt.Errorf("--guest-user and --guest-password (or GUEST_USER/GUEST_PASSWORD env vars) are required")
 	}
 
 	c, err := GetClient()

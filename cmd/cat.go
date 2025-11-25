@@ -27,8 +27,16 @@ var catCmd = &cobra.Command{
 		if targetVMName == "" {
 			return fmt.Errorf("--vm flag is required")
 		}
+
+		if catGuestUser == "" {
+			catGuestUser = os.Getenv("GUEST_USER")
+		}
+		if catGuestPwd == "" {
+			catGuestPwd = os.Getenv("GUEST_PASSWORD")
+		}
+
 		if catGuestUser == "" || catGuestPwd == "" {
-			return fmt.Errorf("--guest-user and --guest-password are required")
+			return fmt.Errorf("--guest-user and --guest-password (or GUEST_USER/GUEST_PASSWORD env vars) are required")
 		}
 
 		ctx := cmd.Context()

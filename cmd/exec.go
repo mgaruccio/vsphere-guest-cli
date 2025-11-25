@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
 	"crypto/tls"
 	"net/url"
 	"strings"
@@ -36,8 +37,16 @@ var execCmd = &cobra.Command{
 		if execCmdStr == "" {
 			return fmt.Errorf("--cmd flag is required")
 		}
+		
+		if execGuestUser == "" {
+			execGuestUser = os.Getenv("GUEST_USER")
+		}
+		if execGuestPwd == "" {
+			execGuestPwd = os.Getenv("GUEST_PASSWORD")
+		}
+
 		if execGuestUser == "" || execGuestPwd == "" {
-			return fmt.Errorf("--guest-user and --guest-password are required")
+			return fmt.Errorf("--guest-user and --guest-password (or GUEST_USER/GUEST_PASSWORD env vars) are required")
 		}
 
 		ctx := cmd.Context()
