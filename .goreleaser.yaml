@@ -16,6 +16,11 @@ builds:
       - goos: windows
         goarch: arm64
 
+release:
+  github:
+    owner: mgaruccio
+    name: vsphere-guest-cli
+
 archives:
   - format: tar.gz
     # Standard naming: guest-cli_Linux_x86_64.tar.gz
