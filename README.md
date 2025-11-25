@@ -1,75 +1,94 @@
 # guest-cli
 
-A CLI tool for interacting with vSphere guests via VMware Tools, designed for AI agents and automation.
+A CLI tool for interacting with vSphere guests via VMware Tools. Designed for AI agents and automation, it allows you to execute commands, transfer files, and type into the console without requiring network connectivity to the guest VM.
 
-## Features
+## Quick Start
 
-*   **Command Execution:** Run commands inside the guest OS (Windows/Linux) and capture output.
-*   **File Transfer:** Upload and download files to/from the guest.
-*   **Console Interaction:** Send keystrokes (HID scan codes) to the VM console.
-*   **VM Listing:** List available VMs and their details.
-*   **Zero-Network:** Works via VMware Tools (VMX channel), requiring no direct network connectivity to the guest IP.
+**1. Configure Connection:**
+Set these environment variables to avoid repeating them for every command:
+```bash
+export VSPHERE_HOST="https://vcenter.example.com/sdk"
+export VSPHERE_USER="administrator@vsphere.local"
+export VSPHERE_PASSWORD="password"
+export VSPHERE_INSECURE=true         # Required if using self-signed certs
+export VSPHERE_DATACENTER="MyDC"     # Optional, but recommended
+```
 
-## Installation
+**2. Run Commands:**
 
-1.  **Build from source:**
-    ```bash
-    go build -o guest-cli main.go
-    ```
-
-2.  **Environment Setup:**
-    Set the following environment variables to avoid passing them as flags:
-    ```bash
-    export VSPHERE_HOST="https://vcenter.example.com/sdk"
-    export VSPHERE_USER="administrator@vsphere.local"
-    export VSPHERE_PASSWORD="password"
-    export VSPHERE_INSECURE=true  # If using self-signed certs
-    export VSPHERE_DATACENTER="DatacenterName" # Optional, but recommended
-    ```
-
-## Usage
-
-### List VMs
+**List VMs:**
 ```bash
 ./guest-cli list
 ```
 
-### Execute Command
-Run `uname -a` on a Linux VM:
+**Execute a Command (Linux):**
 ```bash
-./guest-cli exec --vm "my-linux-vm" --guest-user "root" --guest-password "password" --cmd "uname -a"
+./guest-cli exec --vm "ubuntu-vm" --guest-user "ubuntu" --guest-password "pass" --cmd "uname -a"
 ```
 
-Run `ipconfig` on a Windows VM:
+**Execute with Sudo (Linux):**
 ```bash
-./guest-cli exec --vm "my-windows-vm" --guest-user "Administrator" --guest-password "password" --cmd "ipconfig"
+./guest-cli exec --vm "ubuntu-vm" --guest-user "ubuntu" --guest-password "pass" --cmd "apt update" --sudo
 ```
 
-### File Transfer
+**Read a File:**
+```bash
+./guest-cli cat --vm "ubuntu-vm" --guest-user "ubuntu" --guest-password "pass" /etc/hostname
+```
+
+## Detailed Usage
+
+### Global Flags
+*   `--verbose`, `-v`: Enable detailed debug logging (hidden by default).
+
+### `exec` - Run Commands
+Executes a process inside the guest and streams the output back to your terminal.
+*   `--sudo`: (Linux only) Elevates the command using `sudo`. Assumes `guest-password` is the sudo password.
+*   `--wait`: Wait for the command to finish (default `true`).
+*   `--workdir`: Set working directory.
+
+**Windows Example:**
+```bash
+./guest-cli exec --vm "win-vm" --guest-user "Administrator" --guest-password "pass" --cmd "ipconfig"
+```
+
+### `cp` - File Transfer
 **Upload:**
 ```bash
-./guest-cli upload local-file.txt /tmp/remote-file.txt --vm "my-vm" --guest-user "root" --guest-password "password"
+./guest-cli upload local-file.txt /tmp/remote-file.txt --vm "my-vm" --guest-user "user" --guest-password "pass"
 ```
 
 **Download:**
 ```bash
-./guest-cli download /var/log/syslog ./syslog.txt --vm "my-vm" --guest-user "root" --guest-password "password"
+./guest-cli download /var/log/syslog ./syslog.txt --vm "my-vm" --guest-user "user" --guest-password "pass"
 ```
 
-### Read File (Cat)
-Directly print file content to stdout:
+### `type` - Console Input
+Send keystrokes directly to the VM console (HID events). Useful for typing passwords at login screens or interacting with non-networked VMs.
 ```bash
-./guest-cli cat /etc/hosts --vm "my-vm" --guest-user "root" --guest-password "password"
+./guest-cli type --vm "my-vm" "mypassword" --enter
 ```
 
-### Send Keystrokes
-Type text into the VM console (useful for login screens):
+## Installation
+
+### Download Binary
+Download the latest release for your platform from the [GitHub Releases](https://github.com/mgaruccio/vsphere-guest-cli/releases) page.
+
+### Build from Source
+Requires Go 1.23+:
 ```bash
-./guest-cli type --vm "my-vm" "password123" --enter
+git clone https://github.com/mgaruccio/vsphere-guest-cli.git
+cd vsphere-guest-cli
+go build -o guest-cli main.go
 ```
+
+## Features
+*   **Zero-Network:** Works entirely via the VMware Tools (VMX) channel. No SSH/RDP or IP connectivity required.
+*   **Cross-Platform:** Supports Linux and Windows guests.
+*   **Secure:** Uses standard vSphere API authentication and Guest Operations privileges.
+*   **Automation Ready:** Returns proper exit codes and structured output (optional verbose mode).
 
 ## Requirements
-
-*   **VMware Tools:** Must be installed and running on the guest VM.
-*   **Guest Credentials:** You must have valid username/password for the Guest OS.
-*   **Permissions:** vSphere user requires `VirtualMachine.GuestOperations` privileges.
+*   **VMware Tools:** Must be installed and running on the target guest VM.
+*   **Guest Credentials:** Valid username/password for the guest OS.
+*   **vSphere Permissions:** User requires `VirtualMachine.GuestOperations` privileges.
