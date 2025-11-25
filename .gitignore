@@ -1,0 +1,28 @@
+# Binaries
+guest-cli
+*.exe
+*.dll
+
+# Temporary files
+*.log
+*.tmp
+temp/
+tmp/
+
+# VM Artifacts
+*.ova
+*.ovf
+*.vmdk
+deploy-options.json
+ubuntu-spec.json
+test_upload.txt
+test_download.txt
+local.txt
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+
+# Go
+go.work
